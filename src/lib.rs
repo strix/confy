@@ -124,6 +124,16 @@ pub fn load<T: Serialize + DeserializeOwned + Default>(name: &str) -> Result<T, 
     load_path(path)
 }
 
+pub fn load_by_name<T: Serialize + DeserializeOwned + Default>(name: &str, config_name: &str) -> Result<T, ConfyError> {
+    let project = ProjectDirs::from("rs", "", name).ok_or(ConfyError::BadConfigDirectoryStr)?;
+
+    let config_dir_str = get_configuration_directory_str(&project)?;
+
+    let path: PathBuf = [config_dir_str, &format!("{}.{}", config_name, EXTENSION)].iter().collect();
+
+    load_path(path)
+}
+
 /// Load an application configuration from a specified path.
 ///
 /// This is an alternate version of [`load`] that allows the specification of
@@ -245,6 +255,17 @@ pub fn store<T: Serialize>(name: &str, cfg: T) -> Result<(), ConfyError> {
     let config_dir_str = get_configuration_directory_str(&project)?;
 
     let path: PathBuf = [config_dir_str, &format!("{}.{}", name, EXTENSION)].iter().collect();
+
+    store_path(path, cfg)
+}
+
+pub fn store_by_name<T: Serialize>(name: &str, config_name: &str, cfg: T) -> Result<(), ConfyError> {
+    let project = ProjectDirs::from("rs", "", name).ok_or(ConfyError::BadConfigDirectoryStr)?;
+    fs::create_dir_all(project.config_dir()).map_err(ConfyError::DirectoryCreationFailed)?;
+
+    let config_dir_str = get_configuration_directory_str(&project)?;
+
+    let path: PathBuf = [config_dir_str, &format!("{}.{}", config_name, EXTENSION)].iter().collect();
 
     store_path(path, cfg)
 }
